@@ -400,7 +400,7 @@ void game()
     Deck cards;
     Player player(1);
     Player dealer(0);
-    std::cout << "First and last name:" << std::endl;
+    std::cout << "First name:" << std::endl;
     char *name_;
     std::cin>>name_;
     player.setName(name_);
@@ -418,7 +418,7 @@ void game()
             break;
         }
         std::cout << "Current result::" << player.getpoints() << std::endl;
-        printf("Will you draw again(Y/N)? ");
+        printf("Will you draw (Y/N)? ");
         std::cin >> draw;
         if (draw == 'n' || draw == 'N')
             break;
