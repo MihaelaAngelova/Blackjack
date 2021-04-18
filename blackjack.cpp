@@ -1,6 +1,8 @@
 #include <iostream>
 #include <time.h>
 #include <stdlib.h>
+#include <cstring>
+
 void game();
 enum suits
 {
@@ -126,18 +128,17 @@ public:
         Card temp;
         temp.suits_ = other.suits_;
         temp.value = other.value;
-        for (int help = 0; help < 15; help++)
-            temp.serialNumberCard[help] = other.serialNumberCard[help];
+        std::strcpy(temp.serialNumberCard,other.serialNumberCard);
+
 
         other.suits_ = suits_;
         other.value = value;
-        for (int help = 0; help < 15; help++)
-            other.serialNumberCard[help] = serialNumberCard[help];
+        std::strcpy(other.serialNumberCard,serialNumberCard);
+
 
         suits_ = temp.suits_;
         value = temp.value;
-        for (int help = 0; help < 15; help++)
-            serialNumberCard[help] = temp.serialNumberCard[help];
+        std::strcpy(serialNumberCard,temp.serialNumberCard);
     }
     int addpoints()
     {
@@ -172,19 +173,13 @@ public:
         {
             seqOfCards[i].mergedecknum(i);
         }
-        for (int a = 1, i = 0; a <= 4; a++) //cards generating
-        {
-            for (int b = 1; b <= 13; b++)
-            {
-                seqOfCards[i++].createcard(a, b);
-            }
-        }
+       
         int i = 0;
         for (int suits = 1; suits <= 4; ++suits)
         {
             for (int value = 1; value < 14; ++value)
             {
-                this->seqOfCards[i].createcard(suits, value);
+                this->seqOfCards[i++].createcard(suits, value);
             }
         }
 
@@ -402,38 +397,79 @@ int main()
 
 void game()
 {
-    Deck kartite;
-    Player player;
+    Deck cards;
+    Player player(1);
     Player dealer(0);
     std::cout << "First and last name:" << std::endl;
     char *name_;
-    std::cin >> name_;
+    std::cin>>name_;
     player.setName(name_);
     printf("\033[2J\033[H"); //clear screen and cursor topleft
     bool loser = 0;
+    int firstCard = cards.draw();
+    player.draw(firstCard);
     while (true)
     {
         char draw;
         if (player.getpoints() > 21)
         {
             loser = 1;
+            std::cout << "You lost! :(" << std::endl;
             break;
         }
-
+        std::cout << "Current result::" << player.getpoints() << std::endl;
         printf("Will you draw again(Y/N)? ");
         std::cin >> draw;
         if (draw == 'n' || draw == 'N')
             break;
 
-        int blep = kartite.draw();
-        if (kartite.draw() == 11)
+        int blep = cards.draw();
+        if (blep == 1) // asak
         {
             if (player.getpoints() + 11 > 21)
             {
                 blep = 1;
             }
+            else
+                blep = 11;
         }
         player.draw(blep);
+    }
+    if (loser == 1)
+    {
+        std::cout << "Game over!" << std::endl;
+    }
+    else
+    {
+        while (true)
+        {
+            char draw;
+            if (dealer.getpoints() > 17)
+            {
+                break;
+            }
+
+            int blep = cards.draw();
+            if (blep == 1) // asak
+            {
+                if (dealer.getpoints() + 11 > 17)
+                {
+                    blep = 1;
+                }
+                else
+                    blep = 11;
+            }
+            dealer.draw(blep);
+        }
+        std::cout<<"Player's points: "<<player.getpoints()<<std::endl<<"Dealer's points: "<<dealer.getpoints()<<std::endl;
+        if (dealer.getpoints() > 21 || player.getpoints() >= dealer.getpoints())
+        {
+            std::cout << "You won!" << std::endl;
+        }
+        else
+        {
+            std::cout << "Dealer won!" << std::endl;
+        }
     }
     return;
 }
