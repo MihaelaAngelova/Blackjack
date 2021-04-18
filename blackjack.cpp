@@ -1,46 +1,36 @@
 #include <iostream>
-
+#include <time.h>
+#include <stdlib.h>
+void game();
 enum suits
 {
-    clubs,
+    clubs = 1,
     diamonds,
     hearts,
     spades
 };
-/*
-enum value
-{
-    two = 2,
-    three = 3,
-    four = 4,
-    five = 5,
-    six = 6,
-    seven = 7,
-    eight = 8,
-    nine = 9,
-    ten = 10,
-    J = 10,
-    Q,
-    K,
-    A
-};*/
 
 class Card
 {
 
 private:
     suits suits_;
-    short value;
     /*
-    A - 1
-    J - 11
-    Q - 12
-    K - 13
-    */
+        A - 1
+        J - 11
+        Q - 12
+        K - 13
+        */
+    short value;
     char serialNumberCard[15];
 
 public:
-    Card();
+    Card()
+    {
+        //this->serialNumberCard[15] = "";
+        this->suits_ = diamonds;
+        this->value = 2;
+    }
     Card(char *serNumDeck)
     {
         for (int i = 0; serNumDeck[i]; i++)
@@ -52,6 +42,7 @@ public:
         {
             this->serialNumberCard[i] = other.serialNumberCard[i];
         }
+        value = other.value;
     };
 
     void mergedecknum(int number)
@@ -95,6 +86,11 @@ public:
         return this->value;
     }
 
+    const char *getSerialNumberCards() const
+    {
+        return this->serialNumberCard;
+    }
+
     short cardValue(Card &card1)
     {
         short value = card1.getValue();
@@ -125,6 +121,32 @@ public:
             break;
         }
     }
+    void swapi(Card &other)
+    {
+        Card temp;
+        temp.suits_ = other.suits_;
+        temp.value = other.value;
+        for (int help = 0; help < 15; help++)
+            temp.serialNumberCard[help] = other.serialNumberCard[help];
+
+        other.suits_ = suits_;
+        other.value = value;
+        for (int help = 0; help < 15; help++)
+            other.serialNumberCard[help] = serialNumberCard[help];
+
+        suits_ = temp.suits_;
+        value = temp.value;
+        for (int help = 0; help < 15; help++)
+            serialNumberCard[help] = temp.serialNumberCard[help];
+    }
+    int addpoints()
+    {
+        if (value > 1 && value < 10)
+            return value;
+        if (value > 10 && value < 14)
+            return 10;
+        return 11;
+    }
 };
 
 class Deck
@@ -137,8 +159,14 @@ private:
 public:
     Deck()
     { //serial number of cards
-        this->seqOfCards("Default") = new Card[52];
-        this->serialNumberDeck = "Default";
+        this->seqOfCards = new Card[52];
+        serialNumberDeck[0] = 'D';
+        serialNumberDeck[1] = 'e';
+        serialNumberDeck[2] = 'f';
+        serialNumberDeck[3] = 'a';
+        serialNumberDeck[4] = 'u';
+        serialNumberDeck[5] = 'l';
+        serialNumberDeck[6] = 't';
         this->countCards = 52;
         for (int i = 1; i <= 52; i++)
         {
@@ -151,7 +179,16 @@ public:
                 seqOfCards[i++].createcard(a, b);
             }
         }
-        shuffle(seqOfCards, 52);
+        int i = 0;
+        for (int suits = 1; suits <= 4; ++suits)
+        {
+            for (int value = 1; value < 14; ++value)
+            {
+                this->seqOfCards[i].createcard(suits, value);
+            }
+        }
+
+        shuffle(52);
     };
     Deck(Deck &other)
     {
@@ -161,7 +198,6 @@ public:
         {
             seqOfCards[i] = other.seqOfCards[i];
         }
-        this->serialNumberDeck = new char[10];
         for (size_t i = 0; serialNumberDeck[i] != '\0'; i++)
         {
             serialNumberDeck[i] = other.serialNumberDeck[i];
@@ -170,8 +206,13 @@ public:
 
     Deck(int k, char s[10])
     {
-        this->seqOfCards("Custom") = new Card[k];
-        this->serialNumberDeck = "Custom";
+        this->seqOfCards = new Card[k];
+        serialNumberDeck[0] = 'C';
+        serialNumberDeck[1] = 'u';
+        serialNumberDeck[2] = 's';
+        serialNumberDeck[3] = 't';
+        serialNumberDeck[4] = 'o';
+        serialNumberDeck[5] = 'm';
         this->countCards = k;
         for (int i = 1; i <= k; i++)
         {
@@ -184,26 +225,25 @@ public:
                 seqOfCards[i++].createcard(a, b);
             }
         }
-        shuffle(seqOfCards, k);
+        shuffle(k);
     }
 
     ~Deck()
     {
         delete[] seqOfCards;
-        delete[] serialNumberDeck;
     }
 
-    void shuffle(int size,Card &cards[size])
+    void shuffle(int size)
     {
-        srand(time(0));
+        srand(time(NULL));
         for (int i = 0; i < size; i++)
         {
             int r = i + (rand() % (52 - i));
-            swap(cards[i], cards[r]);
+            seqOfCards[i].swapi(seqOfCards[r]);
         }
     }
 
-    Card draw()
+    int draw()
     {
         Card temp = this->seqOfCards[0];
         for (size_t i = 0; i < this->countCards - 1; i++)
@@ -211,7 +251,7 @@ public:
             this->seqOfCards[i] = this->seqOfCards[i + 1];
         }
         this->seqOfCards[countCards] = temp;
-        return temp;
+        return temp.addpoints();
     }
 
     void swap(size_t &a, size_t &b)
@@ -250,20 +290,6 @@ public:
         }
         return counter;
     }
-
-    int pointsInHand(Deck inHand, Card current)
-    {
-        int points = 0;
-        for (size_t i = 0; inHand[i]; i++)
-        {
-            if (inHand[i].getValue() == 1 && points + 11 <= 21)
-            {
-                inHand[i] = 11;
-            }
-            points += inHand[i];
-        }
-        return points;
-    }
 };
 
 class Player
@@ -278,7 +304,40 @@ private:
 public:
     Player()
     {
-        this->name("Player 1") = new char[32];
+        this->name = new char[7];
+        name[0] = 'P';
+        name[1] = 'l';
+        name[2] = 'a';
+        name[3] = 'y';
+        name[4] = 'e';
+        name[5] = 'r';
+        this->age = 18;
+        this->wins = 0;
+        this->coefWins = 0;
+        this->currPoints = 0;
+    }
+
+    Player(bool gender) //1 - player 0 - dealer
+    {
+        name = new char[7];
+        if (gender)
+        {
+            name[0] = 'P';
+            name[1] = 'l';
+            name[2] = 'a';
+            name[3] = 'y';
+            name[4] = 'e';
+            name[5] = 'r';
+        }
+        else
+        {
+            name[0] = 'D';
+            name[1] = 'e';
+            name[2] = 'a';
+            name[3] = 'l';
+            name[4] = 'e';
+            name[5] = 'r';
+        }
         this->age = 18;
         this->wins = 0;
         this->coefWins = 0;
@@ -300,20 +359,81 @@ public:
 
     Player &operator=(Player &other)
     {
-        delete[] this->name;
-        this->name = new char[32];
-        for (size_t i = 0; name[i]; i++)
+        if (this != &other)
         {
-            this->name[i] = other.name[i];
+            delete[] this->name;
+            this->name = new char[32];
+            for (size_t i = 0; name[i]; i++)
+            {
+                this->name[i] = other.name[i];
+            }
+            this->age = other.age;
+            this->wins = other.wins;
+            this->coefWins = other.coefWins;
+            this->currPoints = other.currPoints;
         }
-        this->age = other.age;
-        this->wins = other.wins;
-        this->coefWins = other.coefWins;
-        this->currPoints = other.currPoints;
+        return *this;
     }
 
     ~Player()
     {
         delete[] this->name;
     }
+
+    void draw(int pts)
+    {
+        currPoints += pts;
+    }
+    int getpoints()
+    {
+        return currPoints;
+    }
+    void setName(char *name_)
+    {
+        this->name = name_;
+    }
 };
+
+int main()
+{
+    game();
+    return 0;
+}
+
+void game()
+{
+    Deck kartite;
+    Player player;
+    Player dealer(0);
+    std::cout << "First and last name:" << std::endl;
+    char *name_;
+    std::cin >> name_;
+    player.setName(name_);
+    printf("\033[2J\033[H"); //clear screen and cursor topleft
+    bool loser = 0;
+    while (true)
+    {
+        char draw;
+        if (player.getpoints() > 21)
+        {
+            loser = 1;
+            break;
+        }
+
+        printf("Will you draw again(Y/N)? ");
+        std::cin >> draw;
+        if (draw == 'n' || draw == 'N')
+            break;
+
+        int blep = kartite.draw();
+        if (kartite.draw() == 11)
+        {
+            if (player.getpoints() + 11 > 21)
+            {
+                blep = 1;
+            }
+        }
+        player.draw(blep);
+    }
+    return;
+}
